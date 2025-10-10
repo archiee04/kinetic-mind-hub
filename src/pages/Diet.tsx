@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, UtensilsCrossed, Flame } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { AICoachDialog } from "@/components/AICoachDialog";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,7 @@ const Diet = () => {
     fat_target: 70,
   });
   const [isAddMealOpen, setIsAddMealOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [newMeal, setNewMeal] = useState({
     name: "",
     calories: 0,
@@ -58,7 +60,7 @@ const Diet = () => {
     if (!user) return;
 
     const today = new Date().toDateString();
-    const [mealsData, goalsData] = await Promise.all([
+    const [mealsData, goalsData, profileData] = await Promise.all([
       supabase
         .from("meals")
         .select("*")
@@ -71,10 +73,16 @@ const Diet = () => {
         .eq("user_id", user.id)
         .limit(1)
         .single(),
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single(),
     ]);
 
     if (mealsData.data) setMeals(mealsData.data);
     if (goalsData.data) setGoals(goalsData.data);
+    if (profileData.data) setUserProfile(profileData.data);
   };
 
   const handleAddMeal = async () => {
@@ -115,14 +123,28 @@ const Diet = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Diet & Nutrition</h1>
-        <Dialog open={isAddMealOpen} onOpenChange={setIsAddMealOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 gradient-hero">
-              <Plus className="h-4 w-4" />
-              Log Meal
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex gap-2">
+          <AICoachDialog
+            type="meal"
+            userContext={{
+              profile: userProfile,
+              nutritionGoal: goals,
+              todayMeals: meals,
+              consumed: totals,
+            }}
+            buttonText="AI Meal Coach"
+            title="AI Meal Suggestions"
+            placeholder="Ask for meal ideas, recipe suggestions, or nutrition advice..."
+          />
+          
+          <Dialog open={isAddMealOpen} onOpenChange={setIsAddMealOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 gradient-hero">
+                <Plus className="h-4 w-4" />
+                Log Meal
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Log Meal</DialogTitle>
             </DialogHeader>
@@ -182,7 +204,8 @@ const Diet = () => {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Flame, Trophy, Target, TrendingUp, Dumbbell } from "lucide-react";
 import heroImage from "@/assets/hero-fitness.jpg";
+import { AICoachDialog } from "@/components/AICoachDialog";
 
 interface DashboardStats {
   workoutsThisWeek: number;
@@ -21,6 +22,7 @@ const Home = () => {
     activeGoals: 0,
     achievements: 0,
   });
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -30,7 +32,7 @@ const Home = () => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
 
-      const [workouts, meals, goals, achievements] = await Promise.all([
+      const [workouts, meals, goals, achievements, profile] = await Promise.all([
         supabase
           .from("exercise_logs")
           .select("*")
@@ -49,6 +51,11 @@ const Home = () => {
           .from("achievements")
           .select("*")
           .eq("user_id", user.id),
+        supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single(),
       ]);
 
       const totalCalories = meals.data?.reduce((sum, meal) => sum + (Number(meal.calories) || 0), 0) || 0;
@@ -60,6 +67,8 @@ const Home = () => {
         activeGoals: goals.data?.length || 0,
         achievements: achievements.data?.length || 0,
       });
+      
+      if (profile.data) setUserProfile(profile.data);
     };
 
     fetchStats();
@@ -148,28 +157,41 @@ const Home = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Quick Tips
+            Quick Tips & AI Coach
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-            <p className="text-sm font-medium">💧 Stay Hydrated</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Drink at least 8 glasses of water today
-            </p>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+              <p className="text-sm font-medium">💧 Stay Hydrated</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Drink at least 8 glasses of water today
+              </p>
+            </div>
+            <div className="p-4 rounded-lg bg-accent/10 border border-accent/20">
+              <p className="text-sm font-medium">🎯 Set Your Goals</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Head to Tracking to define your fitness targets
+              </p>
+            </div>
+            <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
+              <p className="text-sm font-medium">💪 Log Your Workout</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Don't forget to track today's exercise session
+              </p>
+            </div>
           </div>
-          <div className="p-4 rounded-lg bg-accent/10 border border-accent/20">
-            <p className="text-sm font-medium">🎯 Set Your Goals</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Head to Tracking to define your fitness targets
-            </p>
-          </div>
-          <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
-            <p className="text-sm font-medium">💪 Log Your Workout</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Don't forget to track today's exercise session
-            </p>
-          </div>
+          
+          <AICoachDialog
+            type="general"
+            userContext={{
+              profile: userProfile,
+              stats,
+            }}
+            buttonText="Ask AI Coach"
+            title="AI Fitness Coach"
+            placeholder="Ask me anything about fitness, nutrition, or wellness..."
+          />
         </CardContent>
       </Card>
     </div>

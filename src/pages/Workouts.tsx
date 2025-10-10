@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Dumbbell, Clock, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import { AICoachDialog } from "@/components/AICoachDialog";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,8 @@ interface ExerciseLog {
 const Workouts = () => {
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [recentExercises, setRecentExercises] = useState<ExerciseLog[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [goals, setGoals] = useState<any[]>([]);
   const [isAddPlanOpen, setIsAddPlanOpen] = useState(false);
   const [isLogExerciseOpen, setIsLogExerciseOpen] = useState(false);
   const [newPlan, setNewPlan] = useState<{
@@ -67,7 +70,7 @@ const Workouts = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const [plansData, exercisesData] = await Promise.all([
+    const [plansData, exercisesData, profileData, goalsData] = await Promise.all([
       supabase
         .from("workout_plans")
         .select("*")
@@ -79,10 +82,21 @@ const Workouts = () => {
         .eq("user_id", user.id)
         .order("logged_at", { ascending: false })
         .limit(5),
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single(),
+      supabase
+        .from("goals")
+        .select("*")
+        .eq("user_id", user.id),
     ]);
 
     if (plansData.data) setPlans(plansData.data);
     if (exercisesData.data) setRecentExercises(exercisesData.data);
+    if (profileData.data) setUserProfile(profileData.data);
+    if (goalsData.data) setGoals(goalsData.data);
   };
 
   const handleAddPlan = async () => {
@@ -128,6 +142,26 @@ const Workouts = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Workout Plans</h1>
         <div className="flex gap-2">
+          <AICoachDialog
+            type="workout"
+            userContext={{
+              profile: userProfile,
+              goals,
+              recentExercises,
+              plans,
+            }}
+            buttonText="AI Workout Coach"
+            title="AI Workout Recommendations"
+            placeholder="Describe your fitness goals, available equipment, or ask for workout advice..."
+          />
+          
+          <AICoachDialog
+            type="form"
+            userContext={null}
+            buttonText="Form Check"
+            title="AI Form Analysis"
+            placeholder="Describe the exercise and any issues you're experiencing, or ask about proper form..."
+          />
           <Dialog open={isLogExerciseOpen} onOpenChange={setIsLogExerciseOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">

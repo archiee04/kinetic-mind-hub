@@ -46,6 +46,7 @@ const Workouts = () => {
   const [goals, setGoals] = useState<any[]>([]);
   const [isAddPlanOpen, setIsAddPlanOpen] = useState(false);
   const [isLogExerciseOpen, setIsLogExerciseOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
   const [newPlan, setNewPlan] = useState<{
     plan_name: string;
     difficulty: "beginner" | "intermediate" | "advanced";
@@ -292,7 +293,11 @@ const Workouts = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {plans.map((plan) => (
-            <Card key={plan.id} className="shadow-card hover:shadow-glow transition-shadow">
+            <Card 
+              key={plan.id} 
+              className="shadow-card hover:shadow-glow transition-shadow cursor-pointer"
+              onClick={() => setSelectedPlan(plan)}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Dumbbell className="h-5 w-5 text-primary" />
@@ -317,6 +322,37 @@ const Workouts = () => {
           ))}
         </div>
       )}
+
+      {/* Workout Plan Details Dialog */}
+      <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Dumbbell className="h-5 w-5 text-primary" />
+              {selectedPlan?.plan_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="px-3 py-1 rounded-full bg-primary/10 text-primary capitalize font-medium">
+                {selectedPlan?.difficulty}
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>{selectedPlan?.duration}</span>
+              </div>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Created on {selectedPlan && new Date(selectedPlan.created_at).toLocaleDateString()}
+            </div>
+            <div className="p-4 rounded-lg bg-muted/50">
+              <p className="text-sm text-muted-foreground mb-2">
+                This is your {selectedPlan?.difficulty} level workout plan. Track your progress by logging exercises and stay consistent to reach your fitness goals!
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {recentExercises.length > 0 && (
         <Card className="shadow-card">

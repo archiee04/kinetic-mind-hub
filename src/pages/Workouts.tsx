@@ -25,12 +25,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface Exercise {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  muscle_group: string;
+  equipment: string;
+  difficulty: string;
+}
+
 interface WorkoutPlan {
   id: string;
   plan_name: string;
   difficulty: string;
   duration: string;
   created_at: string;
+}
+
+interface PlanExercise {
+  id: string;
+  exercise_id: string;
+  sets: number;
+  reps: number;
+  exercises: Exercise;
 }
 
 interface ExerciseLog {

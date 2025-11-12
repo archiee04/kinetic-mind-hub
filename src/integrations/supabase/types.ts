@@ -103,6 +103,39 @@ export type Database = {
           },
         ]
       }
+      exercises: {
+        Row: {
+          created_at: string
+          description: string | null
+          difficulty: string
+          equipment: string | null
+          id: string
+          image_url: string | null
+          muscle_group: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          equipment?: string | null
+          id?: string
+          image_url?: string | null
+          muscle_group: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          equipment?: string | null
+          id?: string
+          image_url?: string | null
+          muscle_group?: string
+          name?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           created_at: string | null
@@ -293,6 +326,51 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_plan_exercises: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          order_index: number | null
+          reps: number | null
+          sets: number | null
+          workout_plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          order_index?: number | null
+          reps?: number | null
+          sets?: number | null
+          workout_plan_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          order_index?: number | null
+          reps?: number | null
+          sets?: number | null
+          workout_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_plan_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_plan_exercises_workout_plan_id_fkey"
+            columns: ["workout_plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
             referencedColumns: ["id"]
           },
         ]

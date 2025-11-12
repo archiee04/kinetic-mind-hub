@@ -4,9 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Dumbbell, Clock, TrendingUp } from "lucide-react";
+import { Plus, Dumbbell, Clock, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { AICoachDialog } from "@/components/AICoachDialog";
+import { ExerciseSelector } from "@/components/ExerciseSelector";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +42,22 @@ interface ExerciseLog {
   logged_at: string;
 }
 
+interface Exercise {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  muscle_group: string;
+  equipment: string;
+  difficulty: string;
+}
+
+interface PlanExercise extends Exercise {
+  sets: number;
+  reps: number;
+  order_index: number;
+}
+
 const Workouts = () => {
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [recentExercises, setRecentExercises] = useState<ExerciseLog[]>([]);
@@ -47,6 +66,8 @@ const Workouts = () => {
   const [isAddPlanOpen, setIsAddPlanOpen] = useState(false);
   const [isLogExerciseOpen, setIsLogExerciseOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
+  const [planExercises, setPlanExercises] = useState<PlanExercise[]>([]);
+  const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [newPlan, setNewPlan] = useState<{
     plan_name: string;
     difficulty: "beginner" | "intermediate" | "advanced";
@@ -104,19 +125,92 @@ const Workouts = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase.from("workout_plans").insert([{
-      user_id: user.id,
-      ...newPlan,
-    }]);
-
-    if (error) {
-      toast.error("Failed to create workout plan");
-    } else {
-      toast.success("Workout plan created!");
-      setIsAddPlanOpen(false);
-      setNewPlan({ plan_name: "", difficulty: "beginner", duration: "4 weeks" });
-      fetchData();
+    if (selectedExerciseIds.length === 0) {
+      toast.error("Please select at least one exercise");
+      return;
     }
+
+    const { data: planData, error: planError } = await supabase
+      .from("workout_plans")
+      .insert([{
+        user_id: user.id,
+        ...newPlan,
+      }])
+      .select()
+      .single();
+
+    if (planError) {
+      toast.error("Failed to create workout plan");
+      return;
+    }
+
+    // Add exercises to the plan
+    const exercisesToAdd = selectedExerciseIds.map((exerciseId, index) => ({
+      workout_plan_id: planData.id,
+      exercise_id: exerciseId,
+      sets: 3,
+      reps: 10,
+      order_index: index,
+    }));
+
+    const { error: exercisesError } = await supabase
+      .from("workout_plan_exercises")
+      .insert(exercisesToAdd);
+
+    if (exercisesError) {
+      toast.error("Failed to add exercises to plan");
+      return;
+    }
+
+    toast.success("Workout plan created with exercises!");
+    setIsAddPlanOpen(false);
+    setNewPlan({ plan_name: "", difficulty: "beginner", duration: "4 weeks" });
+    setSelectedExerciseIds([]);
+    fetchData();
+  };
+
+  const fetchPlanExercises = async (planId: string) => {
+    const { data, error } = await supabase
+      .from("workout_plan_exercises")
+      .select(`
+        sets,
+        reps,
+        order_index,
+        exercises (
+          id,
+          name,
+          description,
+          image_url,
+          muscle_group,
+          equipment,
+          difficulty
+        )
+      `)
+      .eq("workout_plan_id", planId)
+      .order("order_index");
+
+    if (data && !error) {
+      const formattedExercises = data.map((item: any) => ({
+        ...item.exercises,
+        sets: item.sets,
+        reps: item.reps,
+        order_index: item.order_index,
+      }));
+      setPlanExercises(formattedExercises);
+    }
+  };
+
+  const handlePlanClick = async (plan: WorkoutPlan) => {
+    setSelectedPlan(plan);
+    await fetchPlanExercises(plan.id);
+  };
+
+  const toggleExerciseSelection = (exerciseId: string) => {
+    setSelectedExerciseIds((prev) =>
+      prev.includes(exerciseId)
+        ? prev.filter((id) => id !== exerciseId)
+        : [...prev, exerciseId]
+    );
   };
 
   const handleLogExercise = async () => {
@@ -231,49 +325,61 @@ const Workouts = () => {
                 New Plan
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-6xl max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>Create Workout Plan</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Plan Name</Label>
-                  <Input
-                    value={newPlan.plan_name}
-                    onChange={(e) => setNewPlan({ ...newPlan, plan_name: e.target.value })}
-                    placeholder="e.g., Upper Body Strength"
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="details">Plan Details</TabsTrigger>
+                  <TabsTrigger value="exercises">Select Exercises</TabsTrigger>
+                </TabsList>
+                <TabsContent value="details" className="space-y-4 mt-4">
+                  <div>
+                    <Label>Plan Name</Label>
+                    <Input
+                      value={newPlan.plan_name}
+                      onChange={(e) => setNewPlan({ ...newPlan, plan_name: e.target.value })}
+                      placeholder="e.g., Upper Body Strength"
+                    />
+                  </div>
+                  <div>
+                    <Label>Difficulty</Label>
+                    <Select
+                      value={newPlan.difficulty}
+                      onValueChange={(value: "beginner" | "intermediate" | "advanced") => 
+                        setNewPlan({ ...newPlan, difficulty: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Duration</Label>
+                    <Input
+                      value={newPlan.duration}
+                      onChange={(e) => setNewPlan({ ...newPlan, duration: e.target.value })}
+                      placeholder="e.g., 4 weeks"
+                    />
+                  </div>
+                </TabsContent>
+                <TabsContent value="exercises" className="mt-4">
+                  <ExerciseSelector
+                    selectedExercises={selectedExerciseIds}
+                    onToggleExercise={toggleExerciseSelection}
                   />
-                </div>
-                <div>
-                  <Label>Difficulty</Label>
-                  <Select
-                    value={newPlan.difficulty}
-                    onValueChange={(value: "beginner" | "intermediate" | "advanced") => 
-                      setNewPlan({ ...newPlan, difficulty: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Duration</Label>
-                  <Input
-                    value={newPlan.duration}
-                    onChange={(e) => setNewPlan({ ...newPlan, duration: e.target.value })}
-                    placeholder="e.g., 4 weeks"
-                  />
-                </div>
-                <Button onClick={handleAddPlan} className="w-full gradient-hero">
-                  Create Plan
-                </Button>
-              </div>
+                </TabsContent>
+              </Tabs>
+              <Button onClick={handleAddPlan} className="w-full gradient-hero">
+                Create Plan with {selectedExerciseIds.length} Exercise{selectedExerciseIds.length !== 1 ? 's' : ''}
+              </Button>
             </DialogContent>
           </Dialog>
         </div>
@@ -296,7 +402,7 @@ const Workouts = () => {
             <Card 
               key={plan.id} 
               className="shadow-card hover:shadow-glow transition-shadow cursor-pointer"
-              onClick={() => setSelectedPlan(plan)}
+              onClick={() => handlePlanClick(plan)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -325,7 +431,7 @@ const Workouts = () => {
 
       {/* Workout Plan Details Dialog */}
       <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Dumbbell className="h-5 w-5 text-primary" />
@@ -345,11 +451,44 @@ const Workouts = () => {
             <div className="text-sm text-muted-foreground">
               Created on {selectedPlan && new Date(selectedPlan.created_at).toLocaleDateString()}
             </div>
-            <div className="p-4 rounded-lg bg-muted/50">
-              <p className="text-sm text-muted-foreground mb-2">
-                This is your {selectedPlan?.difficulty} level workout plan. Track your progress by logging exercises and stay consistent to reach your fitness goals!
-              </p>
-            </div>
+            
+            {planExercises.length > 0 ? (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-lg">Exercises</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {planExercises.map((exercise) => (
+                    <Card key={exercise.id} className="overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="flex gap-3 p-3">
+                          <img
+                            src={exercise.image_url}
+                            alt={exercise.name}
+                            className="w-20 h-20 object-cover rounded"
+                          />
+                          <div className="flex-1 space-y-1">
+                            <h4 className="font-semibold">{exercise.name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {exercise.sets} sets × {exercise.reps} reps
+                            </p>
+                            <div className="flex gap-1">
+                              <Badge variant="secondary" className="text-xs">
+                                {exercise.muscle_group}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-lg bg-muted/50">
+                <p className="text-sm text-muted-foreground">
+                  No exercises added to this plan yet.
+                </p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

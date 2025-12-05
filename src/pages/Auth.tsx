@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { z } from "zod";
-import momentumIcon from "@/assets/momentum-icon.jpg";
+import fitpulseIcon from "@/assets/fitpulse-icon.png";
 
 const emailSchema = z.string().email("Invalid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -104,9 +104,9 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center gradient-hero p-4">
       <Card className="w-full max-w-md p-8 shadow-glow">
         <div className="flex flex-col items-center mb-8">
-          <img src={momentumIcon} alt="Momentum" className="w-20 h-20 rounded-2xl mb-4" />
+          <img src={fitpulseIcon} alt="FitPulse" className="w-20 h-20 rounded-2xl mb-4" />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Momentum
+            FitPulse
           </h1>
           <p className="text-muted-foreground text-center mt-2">
             {isLogin ? "Welcome back! Sign in to continue" : "Start your fitness journey today"}

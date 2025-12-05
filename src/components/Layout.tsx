@@ -5,6 +5,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { Home, Dumbbell, UtensilsCrossed, Activity, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import fitpulseIcon from "@/assets/fitpulse-icon.png";
 
 interface LayoutProps {
   children: ReactNode;
@@ -63,9 +64,12 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            FitPulse
-          </h1>
+          <div className="flex items-center gap-2">
+            <img src={fitpulseIcon} alt="FitPulse" className="w-8 h-8 rounded-lg" />
+            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              FitPulse
+            </h1>
+          </div>
           <Button
             variant="ghost"
             size="icon"

@@ -64,7 +64,7 @@ const Layout = ({ children }: LayoutProps) => {
       <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Momentum
+            FitPulse
           </h1>
           <Button
             variant="ghost"

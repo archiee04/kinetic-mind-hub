@@ -87,7 +87,7 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
           <div className="p-6">
             <h2 className="text-3xl font-bold text-white mb-2">
-              Keep the Momentum Going! 💪
+              Feel the Pulse! 💪
             </h2>
             <p className="text-white/90">You're on fire this week</p>
           </div>

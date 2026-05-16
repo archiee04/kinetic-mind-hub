@@ -1,73 +1,140 @@
-# Welcome to your Lovable project
+# FitPulse 💪
+### AI-Powered Fitness & Wellness App
 
-## Project info
+> A full-stack fitness app with AI recommendations, smart meal coaching, vitals tracking, and wearable sync — built for mobile with Capacitor.
 
-**URL**: https://lovable.dev/projects/3e87bb17-f2f9-4453-b883-ada462b3602b
+[![TypeScript](https://img.shields.io/badge/TypeScript-95%25-3178C6?logo=typescript)](https://typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?logo=supabase)](https://supabase.com/)
+[![Capacitor](https://img.shields.io/badge/Capacitor-Mobile-119EFF?logo=capacitor)](https://capacitorjs.com/)
+[![React](https://img.shields.io/badge/React-UI-61DAFB?logo=react)](https://reactjs.org/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-Styling-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Overview
 
-**Use Lovable**
+FitPulse is a cross-platform fitness and wellness application built with React, Supabase, and Capacitor. It combines AI-powered workout recommendations, smart meal coaching, vitals tracking, and real-time wearable sync into a single mobile-first experience — available on both Android and iOS.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3e87bb17-f2f9-4453-b883-ada462b3602b) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## Features
 
-**Use your preferred IDE**
+### 🏠 Home Tab
+- Daily summary — calories burned, workouts completed, vitals trends
+- AI-generated motivational tips and adaptive goal cards
+- Push reminders for workouts, hydration, and meals
+- Streaks and achievement highlights
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 💪 Workout Plans Tab
+- View, create, and edit personal or AI-generated workout plans
+- Plan types: Strength, HIIT, Yoga, Endurance, and more
+- Auto-log exercises with progress sync to Supabase
+- Short clip upload for AI-powered form analysis
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🍽️ Diet Tab
+- Nutritionix / MyFitnessPal API integration
+- AI meal recognition — photo to macro breakdown
+- Smart food suggestions based on daily nutrition targets
+- Visual comparison of intake vs. nutrition goals
 
-Follow these steps:
+### 📊 Tracking Tab
+- Log and visualise key metrics: weight, body fat %, BP, heart rate, sleep
+- Week / month / year trend charts (Recharts / Chart.js)
+- Wearable sync: Fitbit, Google Fit, Apple Health
+- AI-powered insights ("Your average sleep improved by 12% this month")
+- Export or share progress reports
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## AI Features
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Workout Recommender** — Personalised plans based on history, vitals, and progress
+- **Form Correction** — Computer vision posture analysis with real-time tips
+- **Smart Meal Coach** — Macro-balancing meal suggestions throughout the day
+- **Trend Analyzer** — Identifies performance patterns and plateaus
+- **Motivational Engine** — Adaptive goals and AI-generated quotes
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## Tech Stack
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+| Layer | Technology |
+|---|---|
+| Frontend | React + TypeScript |
+| Styling | Tailwind CSS |
+| Backend | Supabase (Postgres + Auth + Edge Functions) |
+| Mobile | Capacitor (Android + iOS) |
+| Charts | Recharts / Chart.js |
+| AI | Gemini Models via Supabase Edge Functions |
+| Notifications | Capacitor Push API |
+| Offline | IndexedDB / SQLite |
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Database Schema
 
-## What technologies are used for this project?
+    users               → id, name, email, age, gender, height, weight
+    workout_plans       → id, user_id, plan_name, duration, difficulty, schedule (JSON)
+    exercise_logs       → id, user_id, workout_plan_id, exercise_name, sets, reps, weight, duration
+    goals               → id, user_id, goal_type, target_value, current_value, progress, deadline
+    achievements        → id, user_id, badge_name, description, points, achieved_at
+    meals               → id, user_id, name, calories, protein, carbs, fats, logged_at
+    nutrition_goals     → id, user_id, daily_calories_target, protein_target, carb_target, fat_target
+    vitals_logs         → id, user_id, weight, body_fat, heart_rate, blood_pressure, sleep_hours
+    device_sync         → id, user_id, source, last_synced_at, data_summary (JSON)
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## API Integrations
 
-## How can I deploy this project?
+- **Fitness Trackers** — Fitbit, Apple Health, Google Fit
+- **Nutrition** — MyFitnessPal / Nutritionix
+- **Notifications** — Capacitor Push API
+- **Weather (optional)** — Outdoor vs. indoor workout suggestions
 
-Simply open [Lovable](https://lovable.dev/projects/3e87bb17-f2f9-4453-b883-ada462b3602b) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## Getting Started
 
-Yes, you can!
+    git clone https://github.com/archiee04/kinetic-mind-hub.git
+    cd kinetic-mind-hub
+    npm install
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Add your environment variables in `.env`:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+    VITE_SUPABASE_URL=your_supabase_url
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+Run in browser:
+
+    npm run dev
+
+Build for mobile:
+
+    npm run build
+    npx cap sync
+    npx cap open android
+
+---
+
+## Project Structure
+
+    kinetic-mind-hub/
+    ├── src/
+    │   ├── components/       # Reusable UI components
+    │   ├── pages/            # Home, Workout, Diet, Tracking tabs
+    │   ├── lib/              # Supabase client, API helpers
+    │   └── hooks/            # Custom React hooks
+    ├── supabase/
+    │   ├── migrations/       # DB schema
+    │   └── functions/        # Edge functions (AI, wearable sync)
+    ├── public/
+    ├── capacitor.config.ts
+    └── README.md
+
+---
+
+## Author
+
+**Archie Srivastava** — [LinkedIn](https://linkedin.com/in/archie-srivastava-36b81835b) · [Email](mailto:archie.srivastava04@gmail.com)  
+Thapar Institute of Engineering & Technology, Patiala
